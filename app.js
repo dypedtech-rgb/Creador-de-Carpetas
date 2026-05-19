@@ -766,7 +766,7 @@ document.addEventListener('keydown', (e) => {
 
 
 // Keyboard shortcut: Enter to generate
-[$newCode, $newName, $modalidad, $tipo].forEach(input => {
+[$newCode, $newName, $tipo].forEach(input => {
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') generate();
     });
@@ -778,3 +778,314 @@ document.addEventListener('keydown', (e) => {
     const savedTheme = localStorage.getItem('isrx-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
 })();
+
+
+/* ============================================================
+   BATCH / CSV MODE
+   ============================================================ */
+
+let batchRows = []; // [{codigo, nombre, tipo}]
+
+// DOM refs
+const $csvDropzone        = document.getElementById('csvDropzone');
+const $csvFileInput       = document.getElementById('csvFileInput');
+const $csvDropzoneClick   = document.getElementById('csvDropzoneClick');
+const $batchTableWrap     = document.getElementById('batchTableWrap');
+const $batchTableBody     = document.getElementById('batchTableBody');
+const $batchCount         = document.getElementById('batchCount');
+const $btnClearBatch      = document.getElementById('btnClearBatch');
+const $btnBatchGenerate   = document.getElementById('btnBatchGenerate');
+const $batchProgressContainer = document.getElementById('batchProgressContainer');
+const $batchProgressBar   = document.getElementById('batchProgressBar');
+const $batchProgressMsg   = document.getElementById('batchProgressMsg');
+const $batchProgressPct   = document.getElementById('batchProgressPct');
+const $btnDownloadSampleCSV = document.getElementById('btnDownloadSampleCSV');
+
+// ---- Sample CSV download ----
+$btnDownloadSampleCSV.addEventListener('click', () => {
+    const sample = [
+        'codigo,nombre,tipo',
+        'FOT-511,fotografia digital,cpu-teorica par',
+        'MUS-301,teoria musical avanzada,cpu-teorica par',
+        'DIS-420,diseno grafico y tipografia,cpu-practica par',
+        'CIN-210,produccion cinematografica,cpu-teorica par',
+        'ARQ-330,arquitectura contemporanea,cpu-practica impar',
+    ].join('\r\n');
+    downloadFile(sample, 'materias_ejemplo.csv', 'text/csv');
+    showToast('CSV de ejemplo descargado');
+});
+
+// ---- Drag & Drop ----
+$csvDropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    $csvDropzone.classList.add('drag-over');
+});
+$csvDropzone.addEventListener('dragleave', () => {
+    $csvDropzone.classList.remove('drag-over');
+});
+$csvDropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    $csvDropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) parseCSVFile(file);
+});
+$csvDropzone.addEventListener('click', () => $csvFileInput.click());
+$csvDropzoneClick.addEventListener('click', e => { e.stopPropagation(); $csvFileInput.click(); });
+$csvFileInput.addEventListener('change', () => {
+    if ($csvFileInput.files[0]) parseCSVFile($csvFileInput.files[0]);
+    $csvFileInput.value = '';
+});
+
+// ---- Parse CSV ----
+function parseCSVFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        const text = e.target.result;
+        const rows = parseCSV(text);
+        if (rows.length === 0) {
+            showToast('El CSV no tiene filas válidas');
+            return;
+        }
+        batchRows = rows;
+        renderBatchTable();
+        showToast(`${rows.length} materias cargadas`);
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    // Detect delimiter (comma or semicolon)
+    const delim = lines[0].includes(';') ? ';' : ',';
+    const headers = lines[0].toLowerCase().split(delim).map(h => h.trim().replace(/["']/g, ''));
+    const iCodigo = headers.findIndex(h => h.includes('codigo') || h.includes('código') || h.includes('code') || h === 'cod');
+    const iNombre = headers.findIndex(h => h.includes('nombre') || h.includes('name'));
+    const iTipo   = headers.findIndex(h => h.includes('tipo') || h.includes('type'));
+    if (iCodigo === -1 || iNombre === -1) {
+        showToast('El CSV debe tener columnas: codigo, nombre');
+        return [];
+    }
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const cols = splitCSVLine(line, delim);
+        const codigo = (cols[iCodigo] || '').trim();
+        const nombre = (cols[iNombre] || '').trim();
+        const tipo   = iTipo >= 0 ? (cols[iTipo] || '').trim() : '';
+        if (codigo && nombre) {
+            rows.push({ codigo, nombre, tipo: tipo || 'cpu-teorica par' });
+        }
+    }
+    return rows;
+}
+
+function splitCSVLine(line, delim) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+            inQuotes = !inQuotes;
+        } else if (ch === delim && !inQuotes) {
+            result.push(current);
+            current = '';
+        } else {
+            current += ch;
+        }
+    }
+    result.push(current);
+    return result;
+}
+
+// ---- Render Table ----
+function renderBatchTable() {
+    $batchTableBody.innerHTML = '';
+    batchRows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'row-ok';
+        tr.dataset.idx = idx;
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td class="code-cell"><input value="${escapeHtml(row.codigo)}" data-field="codigo" data-idx="${idx}"></td>
+            <td><input value="${escapeHtml(row.nombre)}" data-field="nombre" data-idx="${idx}"></td>
+            <td><input value="${escapeHtml(row.tipo)}" data-field="tipo" data-idx="${idx}"></td>
+            <td>
+                <button class="batch-row-del" data-idx="${idx}" title="Eliminar fila">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </td>
+        `;
+        $batchTableBody.appendChild(tr);
+    });
+
+    // Inline edit listeners
+    $batchTableBody.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', () => {
+            const idx = parseInt(input.dataset.idx);
+            const field = input.dataset.field;
+            batchRows[idx][field] = input.value;
+        });
+    });
+
+    // Delete row listeners
+    $batchTableBody.querySelectorAll('.batch-row-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.idx);
+            batchRows.splice(idx, 1);
+            renderBatchTable();
+            updateBatchCount();
+        });
+    });
+
+    $batchTableWrap.style.display = '';
+    updateBatchCount();
+}
+
+function updateBatchCount() {
+    $batchCount.textContent = `${batchRows.length} materia${batchRows.length !== 1 ? 's' : ''} cargada${batchRows.length !== 1 ? 's' : ''}`;
+}
+
+// ---- Clear Batch ----
+$btnClearBatch.addEventListener('click', () => {
+    batchRows = [];
+    $batchTableBody.innerHTML = '';
+    $batchTableWrap.style.display = 'none';
+    showToast('Lista limpiada');
+});
+
+// ---- Batch ZIP Generation ----
+$btnBatchGenerate.addEventListener('click', batchGenerate);
+
+async function batchGenerate() {
+    if (batchRows.length === 0) {
+        showToast('No hay materias cargadas');
+        return;
+    }
+
+    $btnBatchGenerate.disabled = true;
+    $batchProgressContainer.style.display = '';
+
+    const zip = new JSZip();
+    const total = batchRows.length;
+
+    for (let i = 0; i < total; i++) {
+        const row = batchRows[i];
+        const codeLower = row.codigo.toLowerCase();
+        const codeUpper = row.codigo.toUpperCase();
+        const tipo      = row.tipo || 'cpu-teorica par';
+        const nombre    = row.nombre.toLowerCase();
+
+        // Mark row as processing
+        const tr = $batchTableBody.querySelector(`tr[data-idx="${i}"]`);
+        if (tr) tr.className = 'row-processing';
+
+        const pct = Math.round((i / total) * 100);
+        $batchProgressBar.style.width = pct + '%';
+        $batchProgressMsg.textContent = `[${i + 1}/${total}] Procesando: ${row.codigo}`;
+        $batchProgressPct.textContent = pct + '%';
+
+        // Build structure
+        let localStats = { folders: 0, files: 0, images: 0 };
+        const structure = processTemplateForBatch(TEMPLATE_STRUCTURE, codeLower, codeUpper, nombre, tipo, localStats);
+
+        // Add all files to ZIP
+        await addStructureToZip(zip, structure, '', codeLower);
+
+        if (tr) tr.className = 'row-done';
+
+        // Yield to keep UI responsive
+        await new Promise(r => setTimeout(r, 0));
+    }
+
+    $batchProgressBar.style.width = '100%';
+    $batchProgressMsg.textContent = 'Comprimiendo ZIP del semestre...';
+    $batchProgressPct.textContent = '100%';
+
+    try {
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        const date = new Date().toISOString().slice(0, 10);
+        a.download = `semestre_${date}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast(`ZIP generado: ${total} materias`);
+    } catch(e) {
+        showToast('Error al generar ZIP: ' + e.message);
+        console.error(e);
+    } finally {
+        $btnBatchGenerate.disabled = false;
+        setTimeout(() => {
+            $batchProgressContainer.style.display = 'none';
+            // Reset row styles
+            $batchTableBody.querySelectorAll('tr').forEach(tr => tr.className = 'row-ok');
+        }, 3000);
+    }
+}
+
+// Variant of processTemplate that accepts external stats object
+function processTemplateForBatch(node, codeLower, codeUpper, fullName, tipo, stats) {
+    let newName = node.name
+        .replace(/\{CODE\}/g, codeUpper)
+        .replace(/\{code\}/g, codeLower)
+        .replace(/\{FULLNAME\}/g, fullName)
+        .replace(/\{TIPO\}/g, tipo);
+
+    if (node.type === 'folder') { stats.folders++; }
+    else {
+        stats.files++;
+        const ext = node.name.split('.').pop().toLowerCase();
+        if (['png','jpg','jpeg'].includes(ext)) stats.images++;
+    }
+
+    const result = { name: newName, type: node.type };
+    if (node.children) {
+        result.children = node.children
+            .filter(child => {
+                if (child.type === 'file') {
+                    const ext = child.name.split('.').pop().toLowerCase();
+                    return !['xls','xlsx'].includes(ext);
+                }
+                return true;
+            })
+            .map(child => processTemplateForBatch(child, codeLower, codeUpper, fullName, tipo, stats));
+    }
+    return result;
+}
+
+// Add a full structure tree to a JSZip instance
+async function addStructureToZip(zip, node, parentPath, codeLower) {
+    const fullPath = parentPath ? `${parentPath}/${node.name}` : node.name;
+    if (node.type === 'folder') {
+        if (node.children) {
+            for (const child of node.children) {
+                await addStructureToZip(zip, child, fullPath, codeLower);
+            }
+        }
+    } else {
+        const ext = node.name.split('.').pop().toLowerCase();
+        if (['png','jpg','jpeg'].includes(ext)) {
+            // Generate placeholder image
+            let dims = { w: 1280, h: 720 };
+            if (typeof IMG_DIMS !== 'undefined') {
+                for (const [key, val] of Object.entries(IMG_DIMS)) {
+                    const keyBase = key.replace('aci-611', codeLower);
+                    if (node.name === keyBase.split('/').pop()) {
+                        dims = val;
+                        break;
+                    }
+                }
+            }
+            const blob = await generatePlaceholder(node.name, dims.w, dims.h, ext);
+            zip.file(fullPath, blob);
+        } else {
+            zip.file(fullPath, '');
+        }
+    }
+}

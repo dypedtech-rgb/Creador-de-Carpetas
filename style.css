@@ -1009,3 +1009,194 @@ body {
 .tree-node-header.is-image-file:hover .tree-eye-icon {
     opacity: 1;
 }
+
+/* ============================================================
+   BATCH / CSV MODE
+   ============================================================ */
+
+.batch-panel {
+    padding: 1.5rem;
+}
+
+/* Small text button */
+.btn-sm-text {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.78rem;
+    gap: 0.35rem;
+}
+
+/* Drop Zone */
+.csv-dropzone {
+    border: 2px dashed var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    background: var(--bg-secondary);
+    margin-top: 1.25rem;
+}
+
+.csv-dropzone:hover,
+.csv-dropzone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-subtle);
+}
+
+.dropzone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dropzone-title {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.dropzone-link {
+    color: var(--accent-bright);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.dropzone-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.dropzone-sub code {
+    background: var(--accent-subtle);
+    color: var(--accent-bright);
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+}
+
+/* Batch Toolbar */
+.batch-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0 0.75rem 0;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.batch-count {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent-bright);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Batch Table */
+.batch-table-container {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+    max-height: 360px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-hover) transparent;
+}
+
+.batch-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+}
+
+.batch-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bg-tertiary);
+}
+
+.batch-table th {
+    padding: 0.6rem 0.85rem;
+    text-align: left;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--glass-border);
+    white-space: nowrap;
+}
+
+.batch-table td {
+    padding: 0.55rem 0.85rem;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.batch-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.batch-table tbody tr:hover td {
+    background: var(--bg-hover);
+}
+
+.batch-table td:first-child {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    width: 36px;
+}
+
+.batch-table td.code-cell {
+    color: var(--accent-bright);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.batch-table td input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
+}
+
+.batch-table td input:focus {
+    border-bottom: 1px solid var(--accent);
+}
+
+.batch-row-del {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.batch-row-del:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+/* Row status */
+.batch-table tr.row-ok td { }
+.batch-table tr.row-done td { opacity: 0.45; }
+.batch-table tr.row-processing td code {
+    animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
