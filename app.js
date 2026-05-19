@@ -255,8 +255,7 @@ function generateHitos() {
 
 // ---- State ----
 let currentStructure = null;
-let stats = { folders: 0, files: 0, images: 0, replacements: 0 };
-let comparisons = [];
+let stats = { folders: 0, files: 0, images: 0 };
 
 // ---- DOM References ----
 const $newCode = document.getElementById('newCode');
@@ -279,8 +278,6 @@ const $btnExportBAT = document.getElementById('btnExportBAT');
 const $btnExportSH = document.getElementById('btnExportSH');
 const $btnExpandAll = document.getElementById('btnExpandAll');
 const $btnCollapseAll = document.getElementById('btnCollapseAll');
-const $comparisonPanel = document.getElementById('comparisonPanel');
-const $comparisonContent = document.getElementById('comparisonContent');
 const $toast = document.getElementById('toast');
 const $toastText = document.getElementById('toastText');
 const $btnThemeToggle = document.getElementById('btnThemeToggle');
@@ -294,20 +291,6 @@ function processTemplate(node, codeNew, codeLower, codeUpper, fullName, tipo) {
         .replace(/\{FULLNAME\}/g, fullName)
         .replace(/\{TIPO\}/g, tipo);
     
-    const isChanged = newName !== originalName;
-    
-    if (isChanged) {
-        // Generate original version for comparison
-        const origResolved = originalName
-            .replace(/\{CODE\}/g, 'ACI-611')
-            .replace(/\{code\}/g, 'aci-611')
-            .replace(/\{FULLNAME\}/g, 'análisis y contabilidad internacional')
-            .replace(/\{TIPO\}/g, 'cpu-teorica par');
-        
-        comparisons.push({ original: origResolved, new: newName });
-        stats.replacements++;
-    }
-    
     if (node.type === 'folder') {
         stats.folders++;
     } else {
@@ -319,7 +302,7 @@ function processTemplate(node, codeNew, codeLower, codeUpper, fullName, tipo) {
     const result = {
         name: newName,
         type: node.type,
-        isChanged: isChanged
+        isChanged: false
     };
     
     if (node.children) {
@@ -487,8 +470,7 @@ function generate() {
     }
     
     // Reset stats
-    stats = { folders: 0, files: 0, images: 0, replacements: 0 };
-    comparisons = [];
+    stats = { folders: 0, files: 0, images: 0 };
     
     const codeLower = newCode.toLowerCase();
     const codeUpper = newCode.toUpperCase();
@@ -505,32 +487,12 @@ function generate() {
     // Update stats
     $statFolders.textContent = stats.folders;
     $statFiles.textContent = stats.files;
-    $statReplacements.textContent = stats.replacements;
     $statImages.textContent = stats.images;
     $btnDownloadZip.disabled = false;
-    
-    // Show comparison
-    if (comparisons.length > 0) {
-        $comparisonPanel.style.display = '';
-        $comparisonContent.innerHTML = '';
-        comparisons.forEach(c => {
-            const row = document.createElement('div');
-            row.className = 'comparison-row';
-            row.innerHTML = `
-                <span class="comp-original">${escapeHtml(c.original)}</span>
-                <span class="comp-arrow">→</span>
-                <span class="comp-new">${escapeHtml(c.new)}</span>
-            `;
-            $comparisonContent.appendChild(row);
-        });
-    } else {
-        $comparisonPanel.style.display = 'none';
-    }
     
     // Animate stats
     animateValue($statFolders, stats.folders);
     animateValue($statFiles, stats.files);
-    animateValue($statReplacements, stats.replacements);
     animateValue($statImages, stats.images);
 }
 
