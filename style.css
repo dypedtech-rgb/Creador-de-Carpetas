@@ -273,16 +273,28 @@ body {
     border-color: var(--accent);
 }
 
-/* --- Main Content --- */
+/* --- Layout --- */
 .app-main {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 1.5rem;
-    position: relative;
-    z-index: 1;
+    padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 10;
+}
+
+.panels-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .panels-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* --- Control Panel --- */

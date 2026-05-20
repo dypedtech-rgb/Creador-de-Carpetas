@@ -775,7 +775,7 @@ document.addEventListener('keydown', (e) => {
 // ---- Init ----
 (function init() {
     // Restore theme
-    const savedTheme = localStorage.getItem('isrx-theme') || 'dark';
+    const savedTheme = localStorage.getItem('isrx-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
 })();
 
