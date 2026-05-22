@@ -1061,6 +1061,7 @@ function processTemplateForBatch(node, codeLower, codeUpper, fullName, tipo, sta
 async function addStructureToZip(zip, node, parentPath, codeLower) {
     const fullPath = parentPath ? `${parentPath}/${node.name}` : node.name;
     if (node.type === 'folder') {
+        zip.folder(fullPath); // crear la carpeta aunque esté vacía
         if (node.children) {
             for (const child of node.children) {
                 await addStructureToZip(zip, child, fullPath, codeLower);
