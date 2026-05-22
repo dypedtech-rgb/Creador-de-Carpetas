@@ -1,0 +1,4 @@
+# Carpetas de ejemplo / referencia (no subir al repo)
+cco-612-*/
+*.DS_Store
+Thumbs.db
