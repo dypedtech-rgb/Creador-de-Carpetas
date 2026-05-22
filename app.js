@@ -140,27 +140,27 @@ const TEMPLATE_STRUCTURE = {
                     children: [
                         { name: "00 Plan global de formación - {CODE}.xlsx", type: "file" },
                         {
-                            name: "{CODE} Contenidos",
+                            name: "{code}_Contenidos",
                             type: "folder",
                             children: [
-                                { name: "HITO 1", type: "folder", children: [] },
-                                { name: "HITO 2", type: "folder", children: [] },
+                                { name: "Hito 1", type: "folder", children: [] },
+                                { name: "Hito 2", type: "folder", children: [] },
                                 {
-                                    name: "HITO 3",
+                                    name: "Hito 3",
                                     type: "folder",
                                     children: [
                                         { name: "Solucionario", type: "folder", children: [] }
                                     ]
                                 },
                                 {
-                                    name: "HITO 4",
+                                    name: "Hito 4",
                                     type: "folder",
                                     children: [
                                         { name: "Solucionarios", type: "folder", children: [] }
                                     ]
                                 },
                                 {
-                                    name: "HITO 5",
+                                    name: "Hito 5",
                                     type: "folder",
                                     children: [
                                         { name: "Solucionador", type: "folder", children: [] }
@@ -267,7 +267,7 @@ const $treeContent = document.getElementById('treeContent');
 const $statsBar = document.getElementById('statsBar');
 const $statFolders = document.getElementById('statFolders');
 const $statFiles = document.getElementById('statFiles');
-const $statReplacements = document.getElementById('statReplacements');
+// $statReplacements removed — element no longer exists in HTML
 const $statImages = document.getElementById('statImages');
 const $btnDownloadZip = document.getElementById('btnDownloadZip');
 const $progressContainer = document.getElementById('progressContainer');
@@ -524,11 +524,9 @@ function resetAll() {
     `;
     $statFolders.textContent = '0';
     $statFiles.textContent = '0';
-    $statReplacements.textContent = '0';
     $statImages.textContent = '0';
     $btnDownloadZip.disabled = true;
     $progressContainer.style.display = 'none';
-    $comparisonPanel.style.display = 'none';
     currentStructure = null;
 }
 
